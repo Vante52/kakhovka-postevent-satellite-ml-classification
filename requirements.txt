@@ -1,9 +1,11 @@
+geopandas
+joblib
+matplotlib
 numpy
 pandas
-geopandas
-rasterio
-shapely
 pyproj
-matplotlib
+rasterio
 scikit-learn
-joblib
+seaborn
+shapely
+tensorflow
