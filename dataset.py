@@ -1,16 +1,16 @@
 """
-extract_training_dataset.py
+dataset.py
 ----------------------------
 Extrae valores de píxel de las bandas Sentinel-2 en las localizaciones
-definidas por los polígonos de entrenamiento (training.shp).
+definidas por los polígonos de entrenamiento (entrenamiento.shp).
 
 Genera un archivo TSV con columnas:
   Latitude, Longitude, B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, label
 
 USO:
-  1. Ajusta BAND_FILES con las rutas a tus .tif
-  2. Ajusta CLASS_MAP con los nombres de tus clases según el macroclass_id
-  3. Ejecuta: python extract_training_dataset.py
+  1. Ajustar BAND_FILES con las rutas a los .tif
+  2. Ajustar CLASS_MAP con los nombres de las clases según el macroclass_id
+  3. Ejecuta: python dataset.py
 """
 
 import numpy as np
@@ -25,7 +25,7 @@ from pathlib import Path
 # CONFIGURACIÓN — ajusta estas rutas y nombres
 # ─────────────────────────────────────────────
 
-SHAPEFILE = "training.shp"   # ruta a tu shapefile de training
+SHAPEFILE = "entrenamiento.shp"   # ruta a tu shapefile de training
 
 # Opción A: bandas separadas — pon la ruta a cada .tif
 BAND_FILES = {
@@ -54,7 +54,7 @@ CLASS_MAP = {
     4: "Soil",
 }
 
-OUTPUT_TSV = "training2_dataset.tsv"
+OUTPUT_TSV = "training_dataset.tsv"
 
 # ─────────────────────────────────────────────
 # EXTRACCIÓN
@@ -185,8 +185,16 @@ def main():
     print(f"\nPrimeras filas:")
     print(df.head())
 
-    df.to_csv(OUTPUT_TSV, sep="\t", index=False)
-    print(f"\n✓ Dataset guardado en: {OUTPUT_TSV}")
+    # Balancear el dataset
+    min_pixels = df['label'].value_counts().min()
+    print(f"\nMuestreando {min_pixels} píxeles por clase...")
+    df_balanced = df.groupby('label', group_keys=False).apply(
+        lambda x: x.sample(n=min_pixels, random_state=42)
+    ).reset_index(drop=True)
+    print(f"Dataset balanceado:\n{df_balanced['label'].value_counts().to_string()}")
+
+    df_balanced.to_csv(OUTPUT_TSV, sep="\t", index=False)  #guarda el balanceado
+    print(f"\nDataset guardado en: {OUTPUT_TSV}")
 
 
 if __name__ == "__main__":
