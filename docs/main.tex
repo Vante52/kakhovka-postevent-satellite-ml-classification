@@ -1,0 +1,114 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+
+\title{Final Project EDT}
+\author{Santiago Chitiva \\ Valeria Caycedo \\ Samuel Campos \\ Erick Salazar \\ Juan E. Díaz}
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{Phase 1: Problem Definition and Data Acquisition}
+
+\subsection{Event Definition and Study Area}
+
+This project revisits the case study analyzed in the Midterm Project: the collapse
+of the Kakhovka Dam on June 6, 2023, located on the Dnieper River in Kherson Oblast,
+southern Ukraine. The event caused catastrophic downstream flooding and the rapid
+drainage of the Kakhovka Reservoir, making it one of the most significant
+hydrological disasters in recent European history.
+
+The Region of Interest (ROI) is centered on the area surrounding Nova Kakhovka,
+where the effects of reservoir drainage were most clearly observable in satellite
+imagery. This ROI was selected based on image availability and the visibility of
+hydrological changes between the pre- and post-event dates.
+
+\subsection{Satellite Imagery Metadata}
+
+Two Sentinel-2 Level-2A images were acquired from the Copernicus Open Access Hub.
+Table~\ref{tab:imagery_metadata} summarizes their main technical characteristics.
+
+\begin{table}[h]
+    \centering
+    \caption{Technical characteristics of the satellite imagery used.}
+    \label{tab:imagery_metadata}
+    \begin{tabular}{lllllll}
+        \hline
+        \textbf{Date} & \textbf{Satellite} & \textbf{Level} &
+        \textbf{Resolution} & \textbf{Cloud Cover} & \textbf{Role} \\
+        \hline
+        June 18, 2023 & Sentinel-2 A/B & Level-2A & 10 m & $<$30\% & Post-event \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Level-2A products provide Bottom-of-Atmosphere (BOA) reflectance, eliminating the
+need for additional atmospheric correction. The bands used for this project span
+from the visible to the shortwave infrared spectrum, as detailed in
+Table~\ref{tab:bands}.
+
+\begin{table}[h]
+    \centering
+    \caption{Sentinel-2 spectral bands used for dataset construction.}
+    \label{tab:bands}
+    \begin{tabular}{cll}
+        \hline
+        \textbf{Band} & \textbf{Name} & \textbf{Wavelength ($\mu$m)} \\
+        \hline
+        B2  & Blue                   & 0.490 \\
+        B3  & Green                  & 0.560 \\
+        B4  & Red                    & 0.665 \\
+        B5  & Red Edge 1             & 0.705 \\
+        B6  & Red Edge 2             & 0.740 \\
+        B7  & Red Edge 3             & 0.783 \\
+        B8  & Near-Infrared (NIR)    & 0.842 \\
+        B8A & Narrow NIR             & 0.865 \\
+        B11 & SWIR 1                 & 1.610 \\
+        B12 & SWIR 2                 & 2.190 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Dataset Construction}
+
+To prepare the training dataset for the machine learning phase, pixel values were
+extracted from the Sentinel-2 band stack at the locations defined by the training
+polygons digitized in QGIS. Each polygon corresponds to one of four land cover
+classes: Water, Vegetation, Bare Soil, and Built-up.
+
+The extraction was performed using a Python script based on the \texttt{rasterio}
+and \texttt{geopandas} libraries. For each pixel falling within a training polygon,
+the script records its geographic coordinates (Latitude, Longitude), the reflectance
+values for all ten spectral bands, and the corresponding class label. The output was
+exported as a Tab-Separated Values (TSV) file, as required for the subsequent
+training phase.
+
+Table~\ref{tab:tsv_structure} illustrates the structure of the resulting dataset.
+
+\begin{table}[h]
+    \centering
+    \caption{Structure of the exported TSV training dataset.}
+    \label{tab:tsv_structure}
+    \begin{tabular}{lll}
+        \hline
+        \textbf{Column} & \textbf{Type} & \textbf{Description} \\
+        \hline
+        Latitude  & Float  & Geographic latitude of the pixel centroid \\
+        Longitude & Float  & Geographic longitude of the pixel centroid \\
+        B2        & Float  & Blue band reflectance \\
+        B3        & Float  & Green band reflectance \\
+        B4        & Float  & Red band reflectance \\
+        B5        & Float  & Red Edge 1 reflectance \\
+        B6        & Float  & Red Edge 2 reflectance \\
+        B7        & Float  & Red Edge 3 reflectance \\
+        B8        & Float  & NIR band reflectance \\
+        B8A       & Float  & Narrow NIR reflectance \\
+        B11       & Float  & SWIR 1 reflectance \\
+        B12       & Float  & SWIR 2 reflectance \\
+        label     & String & Land cover class (Water, Vegetation, Bare Soil, Built-up) \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\end{document}
