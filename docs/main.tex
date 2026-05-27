@@ -228,6 +228,60 @@ The ANN model achieved performance comparable to the SVM classifier, confirming 
 of different land cover types using Sentinel-2 multispectral imagery.
 
 \subsubsection{K-Nearest Neighbor (KNN)}
+The KNN classifier was trained using an 80/20 train-test split with stratification
+across all four land cover classes. Prior to training, all spectral band values were
+normalized using standard scaling, as KNN relies on Euclidean distance and is sensitive
+to differences in feature magnitude. Hyperparameter optimization was performed via
+5-fold cross-validation over a grid of candidate values for the number of neighbors,
+weighting scheme, and distance metric.
+
+The optimal configuration found was $K = 3$, uniform weighting, and Euclidean distance,
+achieving a macro-averaged F1-Score of 0.9943 during cross-validation. Table~\ref{tab:knn_metrics}
+summarizes the per-class performance metrics obtained on the test set, and
+Table~\ref{tab:knn_cm} presents the corresponding confusion matrix.
+
+\begin{table}[H]
+    \centering
+    \caption{Per-class performance metrics for the KNN classifier.}
+    \label{tab:knn_metrics}
+    \begin{tabular}{lcccc}
+        \hline
+        \textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\
+        \hline
+        Built-up   & 0.9975 & 0.9951 & 0.9963 & 406 \\
+        Soil       & 0.9975 & 0.9926 & 0.9950 & 405 \\
+        Vegetation & 0.9927 & 1.0000 & 0.9963 & 406 \\
+        Water      & 0.9975 & 0.9975 & 0.9975 & 405 \\
+        \hline
+        \textbf{Overall Accuracy} & \multicolumn{4}{c}{99.63\%} \\
+        \textbf{Kappa Coefficient} & \multicolumn{4}{c}{0.9951} \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{Confusion matrix for the KNN classifier (rows = predicted, columns = reference).}
+    \label{tab:knn_cm}
+    \begin{tabular}{lcccc}
+        \hline
+        & \textbf{Built-up} & \textbf{Soil} & \textbf{Vegetation} & \textbf{Water} \\
+        \hline
+        \textbf{Built-up}   & 404 & 1 & 1 & 0 \\
+        \textbf{Soil}       & 0 & 402 & 2 & 1 \\
+        \textbf{Vegetation} & 0 & 0 & 406 & 0 \\
+        \textbf{Water}      & 1 & 0 & 0 & 404 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/knn_confusion_matrix.png}
+    \caption{Confusion matrix for the KNN classifier ($K=3$, uniform weights,
+    Euclidean distance). OA = 99.63\%, Kappa = 0.9951.}
+    \label{fig:knn_cm}
+\end{figure}
 
 \subsubsection{Naive Bayes (NB)}
 The fifth supervised learning architecture implemented in this project was the Naive Bayes classifier. This model is based on Bayes' theorem and estimates the probability that a pixel belongs to a given land-cover class according to its spectral response. In this case, the input variables correspond to the Sentinel-2 spectral bands extracted during the dataset construction stage.
