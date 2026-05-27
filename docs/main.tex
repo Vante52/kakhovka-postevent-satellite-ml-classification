@@ -1,5 +1,6 @@
 \documentclass{article}
 \usepackage{graphicx} % Required for inserting images
+\usepackage{float}
 
 \title{Final Project EDT}
 \author{Santiago Chitiva \\ Valeria Caycedo \\ Samuel Campos \\ Erick Salazar \\ Juan E. Díaz}
@@ -156,7 +157,7 @@ Table~\ref{tab:svm_results} summarizes the evaluation metrics obtained during te
 The confusion matrix shown in Figure~\ref{fig:svm_cm} confirms the high classification accuracy of the model. Most samples were correctly classified, with
 only a very small number of misclassifications between spectrally similar classes.
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.75\linewidth]{figures/svm_confusion_matrix.png}
   \caption{Confusion matrix obtained from the SVM classifier.}
@@ -168,6 +169,64 @@ baseline for comparison with the other machine learning approaches evaluated in 
 
 \subsubsection{Artificial Neural Networks (ANN)}
 
+An Artificial Neural Network (ANN) model was implemented to evaluate the performance of deep learning techniques for multispectral land cover
+classification. Neural networks are capable of learning complex nonlinear relationships between spectral features and target classes, making them highly
+suitable for remote sensing applications involving high-dimensional data.
+
+The ANN was trained using the same dataset employed for the SVM classifier, containing 8108 labeled pixel samples equally distributed among the classes
+Built-up, Soil, Vegetation, and Water. Each sample contains the reflectance values corresponding to the ten Sentinel-2 spectral bands selected for this
+study.
+
+Prior to training, the dataset was normalized and divided into training and testing subsets using a stratified split. Approximately 70\% of the data was
+used for training, while the remaining 30\% was reserved for model evaluation.
+
+The neural network architecture consisted of multiple fully connected dense layers with ReLU activation functions and Dropout regularization layers to
+reduce overfitting. The final output layer used a softmax activation function to perform multiclass classification across the four land cover categories.
+
+The model was trained for 50 epochs and achieved a final Overall Accuracy of 99.59\% on the testing dataset. The training history demonstrated stable
+convergence and high validation accuracy throughout the training process.
+
+Table~\ref{tab:ann_results} summarizes the classification metrics obtained for the ANN model.
+
+\begin{table}[h]
+    \centering
+    \caption{Classification report for the ANN model.}
+    \label{tab:ann_results}
+    \begin{tabular}{lcccc}
+        \hline
+        \textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-score} & \textbf{Support} \\
+        \hline
+        Built-up   & 1.00 & 1.00 & 1.00 & 608 \\
+        Soil       & 0.99 & 1.00 & 0.99 & 608 \\
+        Vegetation & 1.00 & 1.00 & 1.00 & 609 \\
+        Water      & 1.00 & 0.99 & 1.00 & 608 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Figure~\ref{fig:ann_cm} presents the confusion matrix generated from the ANN predictions. The matrix indicates that the vast majority of samples were
+correctly classified, with only minimal confusion between a few spectrally similar classes.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{figures/nn_confusion_matrix.png}
+    \caption{Confusion matrix obtained from the ANN classifier.}
+    \label{fig:ann_cm}
+\end{figure}
+
+Figure~\ref{fig:ann_history} shows the training history of the neural network, including the evolution of training and validation accuracy during the
+learning process. The results demonstrate rapid convergence and stable generalization performance.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figures/nn_training_history.png}
+    \caption{Training and validation accuracy history for the ANN model.}
+    \label{fig:ann_history}
+\end{figure}
+
+The ANN model achieved performance comparable to the SVM classifier, confirming that deep learning approaches can effectively model the spectral behavior
+of different land cover types using Sentinel-2 multispectral imagery.
+
 \subsubsection{K-Nearest Neighbor (KNN)}
 
 \subsubsection{Naive Bayes (NB)}
@@ -175,3 +234,4 @@ baseline for comparison with the other machine learning approaches evaluated in 
 \section{Phase 3: Synthesis and Prediction}
 
 \end{document}
+
