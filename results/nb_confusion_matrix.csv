@@ -1,0 +1,5 @@
+,pred_Built-up,pred_Soil,pred_Vegetation,pred_Water
+true_Built-up,535,52,1,20
+true_Soil,82,453,60,13
+true_Vegetation,0,39,563,7
+true_Water,99,6,0,503
