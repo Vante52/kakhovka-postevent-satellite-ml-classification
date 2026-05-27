@@ -121,6 +121,51 @@ Table~\ref{tab:tsv_structure} illustrates the structure of the resulting dataset
 
 \subsubsection{Support Vector Machine (SVM)}
 
+A Support Vector Machine (SVM) classifier was implemented to perform supervised land cover classification using the spectral information extracted from
+the Sentinel-2 imagery. SVM is a widely used machine learning algorithm in remote sensing applications due to its strong performance in high-dimensional
+datasets and its ability to separate classes using optimal decision boundaries.
+
+The training dataset, evenly distributed among the four land cover classes: Built-up, Soil, Vegetation, and Water. Each
+sample corresponds to a single pixel and contains the reflectance values from the ten spectral bands used in this project.
+
+Before training, the dataset was divided into training and testing subsets using a stratified split in order to preserve the class distribution.
+Approximately 70\% of the samples were used for training and 30\% for evaluation.
+
+The SVM model achieved an Overall Accuracy of 99.75\%, demonstrating excellent classification performance across all land cover categories. Precision,
+recall, and F1-score values were close to 1.00 for every class, indicating that the spectral signatures extracted from the Sentinel-2 bands provide strong
+class separability.
+
+Table~\ref{tab:svm_results} summarizes the evaluation metrics obtained during testing.
+
+\begin{table}[h]
+  \centering
+  \caption{Classification report for the SVM model.}
+  \label{tab:svm_results}
+  \begin{tabular}{lcccc}
+    \hline
+    \textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-score} & \textbf{Support} \\
+    \hline
+    Built-up   & 1.00 & 1.00 & 1.00 & 608 \\
+    Soil       & 1.00 & 0.99 & 1.00 & 608 \\
+    Vegetation & 0.99 & 1.00 & 1.00 & 609 \\
+    Water      & 1.00 & 1.00 & 1.00 & 608 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+The confusion matrix shown in Figure~\ref{fig:svm_cm} confirms the high classification accuracy of the model. Most samples were correctly classified, with
+only a very small number of misclassifications between spectrally similar classes.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.75\linewidth]{figures/svm_confusion_matrix.png}
+  \caption{Confusion matrix obtained from the SVM classifier.}
+  \label{fig:svm_cm}
+\end{figure}
+
+These results indicate that the SVM model is highly effective for multispectral land cover classification using Sentinel-2 imagery and provides a strong
+baseline for comparison with the other machine learning approaches evaluated in this project.
+
 \subsubsection{Artificial Neural Networks (ANN)}
 
 \subsubsection{K-Nearest Neighbor (KNN)}
