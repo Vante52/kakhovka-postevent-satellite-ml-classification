@@ -230,6 +230,95 @@ of different land cover types using Sentinel-2 multispectral imagery.
 \subsubsection{K-Nearest Neighbor (KNN)}
 
 \subsubsection{Naive Bayes (NB)}
+The fifth supervised learning architecture implemented in this project was the Naive Bayes classifier. This model is based on Bayes' theorem and estimates the probability that a pixel belongs to a given land-cover class according to its spectral response. In this case, the input variables correspond to the Sentinel-2 spectral bands extracted during the dataset construction stage.
+
+Since the spectral bands are continuous numerical variables, the selected implementation was Gaussian Naive Bayes. This variant assumes that the values of each feature follow a Gaussian distribution within each class. Although the model assumes conditional independence between the spectral bands, which is a strong simplification for multispectral satellite data, it provides a useful probabilistic baseline for comparison against more complex models such as Decision Trees, Support Vector Machines, Artificial Neural Networks, and K-Nearest Neighbors.
+
+The model was trained using the tabular dataset generated from the training polygons. The input features were the spectral bands B2, B3, B4, B5, B6, B7, B8, B8A, B11, and B12, while the target variable was the land-cover class label. The dataset was divided into training and testing subsets, preserving the class distribution. The final split contained 5675 training samples and 2433 testing samples.
+
+A hyperparameter search was performed over the \texttt{var\_smoothing} parameter. The best value obtained was:
+
+\begin{equation}
+\texttt{var\_smoothing} = 1 \times 10^{-12}
+\end{equation}
+
+This value was used to train the final Gaussian Naive Bayes model.
+
+\begin{table}[H]
+\centering
+\caption{Summary metrics for the Gaussian Naive Bayes classifier.}
+\label{tab:nb_summary_metrics}
+\begin{tabular}{lc}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Best \texttt{var\_smoothing} & $1.0 \times 10^{-12}$ \\
+Cross-validation F1 macro & 0.8518 \\
+Overall accuracy & 0.8442 \\
+Kappa coefficient & 0.7923 \\
+F1 macro & 0.8444 \\
+F1 weighted & 0.8445 \\
+Training samples & 5675 \\
+Testing samples & 2433 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The obtained overall accuracy was 0.8442, meaning that approximately 84.42\% of the test pixels were correctly classified. The Kappa coefficient reached 0.7923, indicating a strong level of agreement between the predicted and reference classes beyond random chance. The F1 macro score was 0.8444, showing that the classifier achieved balanced performance across the four land-cover categories.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/nb_confusion_matrix.png}
+\caption{Confusion matrix obtained with the Gaussian Naive Bayes classifier.}
+\label{fig:nb_confusion_matrix}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Confusion matrix for the Gaussian Naive Bayes classifier.}
+\label{tab:nb_confusion_matrix}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{True / Predicted} & \textbf{Built-up} & \textbf{Soil} & \textbf{Vegetation} & \textbf{Water} \\
+\midrule
+Built-up    & 535 & 52  & 1   & 20 \\
+Soil        & 82  & 453 & 60  & 13 \\
+Vegetation  & 0   & 39  & 563 & 7  \\
+Water       & 99  & 6   & 0   & 503 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The confusion matrix shows that the model performed well for all classes, with the highest number of correct predictions located along the main diagonal. Vegetation was the best classified class, with 563 correctly predicted pixels and an F1-score of 0.9132. This indicates that vegetation has a clearly distinguishable spectral signature in the selected Sentinel-2 bands.
+
+Water also obtained strong results, with 503 correctly classified pixels and an F1-score of 0.8740. However, 99 water pixels were incorrectly classified as built-up areas. This confusion may be associated with spectral similarities in dark or low-reflectance regions, shadows, or mixed pixels near the boundaries between flooded and urbanized zones.
+
+Built-up areas achieved 535 correct predictions and an F1-score of 0.8082. The main confusion for this class occurred with soil, where 52 built-up pixels were classified as soil. This behavior is expected in post-event satellite imagery, since exposed surfaces, debris, dry soil, and artificial materials may present similar spectral responses.
+
+The soil class obtained the lowest F1-score among the four classes, with a value of 0.7824. The main errors occurred between soil and built-up areas, with 82 soil pixels classified as built-up, and between soil and vegetation, with 60 soil pixels classified as vegetation. This suggests that soil is the most spectrally ambiguous class in the current dataset.
+
+\begin{table}[H]
+\centering
+\caption{Classification report for the Gaussian Naive Bayes classifier.}
+\label{tab:nb_classification_report}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-score} & \textbf{Support} \\
+\midrule
+Built-up   & 0.7472 & 0.8799 & 0.8082 & 608 \\
+Soil       & 0.8236 & 0.7451 & 0.7824 & 608 \\
+Vegetation & 0.9022 & 0.9245 & 0.9132 & 609 \\
+Water      & 0.9263 & 0.8273 & 0.8740 & 608 \\
+\midrule
+Macro avg.    & 0.8499 & 0.8442 & 0.8444 & 2433 \\
+Weighted avg. & 0.8499 & 0.8442 & 0.8445 & 2433 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Overall, the Gaussian Naive Bayes classifier provided a solid probabilistic baseline for land-cover classification in the Kakhovka post-event scene. Its main advantage is that it is computationally simple and fast to train, while still producing competitive results. Nevertheless, some confusion remains between spectrally similar classes, particularly soil and built-up areas, as well as water and built-up areas. These limitations are consistent with the independence assumption of Naive Bayes, since the model does not explicitly capture correlations between spectral bands.
+
+Therefore, the Naive Bayes model can be considered a useful reference model for the comparative evaluation stage. Its final performance, with an overall accuracy of 0.8442, a Kappa coefficient of 0.7923, and a macro F1-score of 0.8444, provides a baseline against which the remaining supervised classifiers can be compared.
 
 \section{Phase 3: Synthesis and Prediction}
 
