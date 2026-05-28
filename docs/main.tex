@@ -114,7 +114,33 @@ Table~\ref{tab:tsv_structure} illustrates the structure of the resulting dataset
 
 \section{Phase 2: Pre-processing and Training}
 
-\subsection{Pre-procesing}
+\subsection{Pre-processing}
+
+Before training the machine learning models, several pre-processing operations were applied to the dataset in order to improve data consistency, ensure
+fair model evaluation, and optimize classification performance.
+
+The exported TSV dataset contained spectral reflectance values extracted from Sentinel-2 imagery for four land cover classes: Built-up, Soil, Vegetation,
+and Water. Each sample represented a single pixel and included ten spectral features corresponding to bands B2, B3, B4, B5, B6, B7, B8, B8A, B11, and B12.
+
+The initial dataset contained 8108 labeled samples, evenly distributed among the four classes, with 2027 samples per category. This balanced distribution
+reduced the risk of model bias toward any specific class during training.
+
+Prior to model training, the dataset was inspected for missing or invalid values. Since the spectral extraction process was performed directly from
+Sentinel-2 Level-2A products, no significant missing data were detected and no additional interpolation procedures were required.
+
+The categorical class labels were encoded into numerical representations in order to be compatible with the machine learning algorithms. Subsequently, the
+dataset was divided into training and testing subsets using stratified sampling to preserve the original class distribution. Approximately 70\% of the
+samples were used for training and 30\% for testing.
+
+Feature scaling was also applied during the pre-processing stage. Since some algorithms, particularly Artificial Neural Networks (ANN) and K-Nearest
+Neighbors (KNN), are sensitive to differences in feature magnitude, the spectral bands were normalized using standard scaling. This transformation ensured
+that all features contributed proportionally during the optimization process.
+
+For the ANN implementation, the target labels were additionally transformed into categorical representations suitable for multiclass classification with a
+softmax output layer. Regularization techniques such as Dropout were later used during training to reduce the risk of overfitting.
+
+Overall, the pre-processing stage ensured that the spectral dataset was properly formatted, balanced, normalized, and ready for supervised land cover
+classification using the selected machine learning approaches.
 
 \subsection{Models}
 
