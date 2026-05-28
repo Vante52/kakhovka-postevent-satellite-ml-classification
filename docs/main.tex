@@ -1,6 +1,7 @@
 \documentclass{article}
 \usepackage{graphicx} % Required for inserting images
 \usepackage{float}
+\usepackage{booktabs}
 
 \title{Final Project EDT}
 \author{Santiago Chitiva \\ Valeria Caycedo \\ Samuel Campos \\ Erick Salazar \\ Juan E. Díaz}
@@ -145,6 +146,38 @@ classification using the selected machine learning approaches.
 \subsection{Models}
 
 \subsubsection{Decision Trees (DT)}
+
+The results show excellent performance of the Decision Tree model in the post-event classification problem. An overall accuracy of $98.56\%$ means that, out of 2433 test samples, almost all were correctly classified. Furthermore, a Kappa coefficient of $0.9808$ indicates very high agreement beyond chance, confirming that the model is actually learning useful spectral patterns rather than simply exploiting the class distribution.
+
+\begin{table}[H]
+\centering
+\caption{Classification Report for the Decision Tree Model}
+\label{tab:classification_report}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-score} & \textbf{Support} \\
+\hline
+Built-up   & 0.9806 & 0.9951 & 0.9878 & 608 \\
+Soil       & 0.9867 & 0.9737 & 0.9801 & 608 \\
+Vegetation & 0.9870 & 0.9984 & 0.9927 & 609 \\
+Water      & 0.9883 & 0.9753 & 0.9818 & 608 \\
+\hline
+
+\end{tabular}
+\end{table}
+
+The macro F1-score of $0.9856$ reinforces this conclusion because it averages performance across classes while giving equal importance to each one, and it still remains very high. Likewise, the weighted F1-score of $0.9856$ closely matches the macro value, suggesting balanced performance and the absence of clearly disadvantaged classes. In other words, the model not only performs well globally, but also consistently across all land-cover categories.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/DT_confusion_matrix.png}
+    \caption{Confusion matrix obtained from the Decision Trees.}
+    \label{fig:placeholder}
+\end{figure}
+
+The confusion matrix shows that \textit{Vegetation} is the strongest class ($608/609$ correctly classified samples), followed by \textit{Built-up} ($605/608$). The most frequent confusions occur between \textit{Soil} and \textit{Water}, and to a lesser extent between \textit{Water} and \textit{Built-up}. This behavior is expected in satellite imagery because of local spectral similarities, mixed pixels, and humidity or shadow effects. Even with these specific confusions, the number of errors is very small compared to the total number of samples and does not compromise the overall quality of the model.
+
+Finally, it can be concluded that the Decision Tree model provides a good performance for the Kakhovka scene and achieves effective land-cover separation.
 
 \subsubsection{Support Vector Machine (SVM)}
 
@@ -403,4 +436,5 @@ Therefore, the Naive Bayes model can be considered a useful reference model for 
 \section{Phase 3: Synthesis and Prediction}
 
 \end{document}
+
 
