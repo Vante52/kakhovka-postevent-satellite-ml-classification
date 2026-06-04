@@ -24,7 +24,24 @@ hydrological disasters in recent European history.
 The Region of Interest (ROI) is centered on the area surrounding Nova Kakhovka,
 where the effects of reservoir drainage were most clearly observable in satellite
 imagery. This ROI was selected based on image availability and the visibility of
-hydrological changes between the pre- and post-event dates.
+hydrological changes in the post-event date (June 18, 2023).
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/roi_background_osm.png}
+        \caption{ROI on an OpenStreetMap background.}
+        \label{fig:roi_osm}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/roi_background_normal.png}
+        \caption{ROI on Sentinel-2 image post-event.}
+        \label{fig:roi_normal}
+    \end{minipage}
+\end{figure}
 
 \subsection{Satellite Imagery Metadata}
 
@@ -79,6 +96,30 @@ extracted from the Sentinel-2 band stack at the locations defined by the trainin
 polygons digitized in QGIS. Each polygon corresponds to one of four land cover
 classes: Water, Vegetation, Bare Soil, and Built-up.
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/training_polygons_falsecolor.png}
+    \caption{False-color composite (NIR--Red--Green) with digitized training polygons over the post-event study area.}
+    \label{fig:training_polygons}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/signature_list_1.png}
+        \caption{ROI \& Signature list: clases Water (MC 1) y Built-up (MC 2).}
+        \label{fig:sig1}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/signature_list_2.png}
+        \caption{ROI \& Signature list: clases Vegetation (MC 3) y Soil (MC 4).}
+        \label{fig:sig2}
+    \end{minipage}
+\end{figure}
+
 The extraction was performed using a Python script based on the \texttt{rasterio}
 and \texttt{geopandas} libraries. For each pixel falling within a training polygon,
 the script records its geographic coordinates (Latitude, Longitude), the reflectance
@@ -113,6 +154,36 @@ Table~\ref{tab:tsv_structure} illustrates the structure of the resulting dataset
     \end{tabular}
 \end{table}
 
+Table~\ref{tab:dataset_sample} shows the first three extracted pixels for each land cover class.
+
+\begin{table}[H]
+    \centering
+    \caption{Sample of the training dataset: first three pixels per class (band values in DN).}
+    \label{tab:dataset_sample}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{llccccccccccl}
+        \hline
+        \textbf{Latitude} & \textbf{Longitude} & \textbf{B2} & \textbf{B3} & \textbf{B4} & \textbf{B5} & \textbf{B6} & \textbf{B7} & \textbf{B8} & \textbf{B8A} & \textbf{B11} & \textbf{B12} & \textbf{Label} \\
+        \hline
+        46.7608 & 33.3754 & 2194 & 2594 & 2814 & 3081 & 3493 & 3680 & 3706 & 3814 & 3981 & 3641 & Built-up \\
+        46.7613 & 33.3728 & 2228 & 2422 & 2636 & 3922 & 4128 & 4250 & 3146 & 4389 & 5874 & 6179 & Built-up \\
+        46.7432 & 33.3801 & 3118 & 3508 & 3654 & 3765 & 3625 & 3636 & 3614 & 3530 & 4830 & 5244 & Built-up \\
+        \hline
+        46.7859 & 33.7286 & 1672 & 2032 & 1980 & 2582 & 3697 & 3947 & 4010 & 4147 & 4130 & 3402 & Soil \\
+        46.9410 & 33.3038 & 1637 & 1803 & 2108 & 2274 & 2362 & 2492 & 2582 & 2731 & 4313 & 4164 & Soil \\
+        46.9398 & 33.3070 & 1618 & 1822 & 2116 & 2325 & 2395 & 2520 & 2564 & 2732 & 4246 & 4110 & Soil \\
+        \hline
+        46.8116 & 33.3766 & 1433 & 1647 & 1747 & 2160 & 3027 & 3297 & 3254 & 3573 & 3201 & 2323 & Vegetation \\
+        46.8139 & 33.3806 & 1418 & 1698 & 1732 & 2232 & 3184 & 3495 & 3654 & 3789 & 3365 & 2495 & Vegetation \\
+        46.8154 & 33.3775 & 1418 & 1693 & 1552 & 2172 & 3293 & 3501 & 3520 & 3749 & 2974 & 2121 & Vegetation \\
+        \hline
+        46.8072 & 33.4318 & 1930 & 2158 & 2342 & 2509 & 2602 & 2727 & 2814 & 2894 & 2539 & 1949 & Water \\
+        46.8025 & 33.4031 & 1750 & 1896 & 1952 & 2074 & 2017 & 2046 & 2130 & 1998 & 1588 & 1474 & Water \\
+        46.7926 & 33.4182 & 1693 & 1872 & 2082 & 2246 & 2365 & 2422 & 2532 & 2712 & 4124 & 2849 & Water \\
+        \hline
+    \end{tabular}}
+\end{table}
+
 \section{Phase 2: Pre-processing and Training}
 
 \subsection{Pre-processing}
@@ -123,8 +194,33 @@ fair model evaluation, and optimize classification performance.
 The exported TSV dataset contained spectral reflectance values extracted from Sentinel-2 imagery for four land cover classes: Built-up, Soil, Vegetation,
 and Water. Each sample represented a single pixel and included ten spectral features corresponding to bands B2, B3, B4, B5, B6, B7, B8, B8A, B11, and B12.
 
-The initial dataset contained 8108 labeled samples, evenly distributed among the four classes, with 2027 samples per category. This balanced distribution
-reduced the risk of model bias toward any specific class during training.
+The initial extraction yielded a highly imbalanced dataset of 547{,}173 pixels,
+with a severe class disparity as shown in Table~\ref{tab:raw_distribution}.
+
+\begin{table}[H]
+    \centering
+    \caption{Raw pixel distribution before balancing.}
+    \label{tab:raw_distribution}
+    \begin{tabular}{lc}
+        \hline
+        \textbf{Class} & \textbf{Pixel count} \\
+        \hline
+        Water      & 510{,}071 \\
+        Soil       & 22{,}171 \\
+        Vegetation & 13{,}379 \\
+        Built-up   & 1{,}552 \\
+        \hline
+        \textbf{Total} & 547{,}173 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Water dominated the dataset with over 93\% of all pixels, which would have
+caused severe bias toward that class in any trained model. To correct this,
+additional training polygons were digitized specifically for the Built-up class,
+and the dataset was subsequently balanced by random undersampling to 2{,}027
+pixels per class, yielding a final balanced dataset of 8{,}108 samples evenly
+distributed among the four categories.
 
 Prior to model training, the dataset was inspected for missing or invalid values. Since the spectral extraction process was performed directly from
 Sentinel-2 Level-2A products, no significant missing data were detected and no additional interpolation procedures were required.
@@ -146,6 +242,25 @@ classification using the selected machine learning approaches.
 \subsection{Models}
 
 \subsubsection{Decision Trees (DT)}
+The following table summarizes the hyperparameter configurations tested during the model optimization process.
+
+\begin{table}[H]
+    \centering
+    \caption{Hyperparameter search space for the Decision Tree classifier.}
+    \label{tab:dt_hpo}
+    \begin{tabular}{ll}
+        \hline
+        \textbf{Hyperparameter} & \textbf{Values tested} \\
+        \hline
+        \texttt{criterion}         & gini, entropy, log\_loss \\
+        \texttt{max\_depth}        & None, 5, 10, 15, 20 \\
+        \texttt{min\_samples\_split} & 2, 5, 10 \\
+        \texttt{min\_samples\_leaf}  & 1, 2, 4 \\
+        \hline
+        \multicolumn{2}{l}{\textit{Method: 5-fold StratifiedKFold, scoring: F1-macro}} \\
+        \hline
+    \end{tabular}
+\end{table}
 
 The results show excellent performance of the Decision Tree model in the post-event classification problem. An overall accuracy of $98.56\%$ means that, out of 2433 test samples, almost all were correctly classified. Furthermore, a Kappa coefficient of $0.9808$ indicates very high agreement beyond chance, confirming that the model is actually learning useful spectral patterns rather than simply exploiting the class distribution.
 
@@ -190,6 +305,23 @@ sample corresponds to a single pixel and contains the reflectance values from th
 
 Before training, the dataset was divided into training and testing subsets using a stratified split in order to preserve the class distribution.
 Approximately 70\% of the samples were used for training and 30\% for evaluation.
+
+\begin{table}[H]
+    \centering
+    \caption{Hyperparameter search space for the SVM classifier.}
+    \label{tab:svm_hpo}
+    \begin{tabular}{ll}
+        \hline
+        \textbf{Hyperparameter} & \textbf{Values tested} \\
+        \hline
+        \texttt{kernel}  & RBF (fixed) \\
+        \texttt{C}       & 0.5, 1.0, 1.5, \ldots, 15.0 (step 0.5, 30 values) \\
+        \texttt{gamma}   & scale (fixed) \\
+        \hline
+        \multicolumn{2}{l}{\textit{Method: sequential evaluation on test set}} \\
+        \hline
+    \end{tabular}
+\end{table}
 
 The SVM model achieved an Overall Accuracy of 99.75\%, demonstrating excellent classification performance across all land cover categories. Precision,
 recall, and F1-score values were close to 1.00 for every class, indicating that the spectral signatures extracted from the Sentinel-2 bands provide strong
@@ -242,6 +374,26 @@ used for training, while the remaining 30\% was reserved for model evaluation.
 The neural network architecture consisted of multiple fully connected dense layers with ReLU activation functions and Dropout regularization layers to
 reduce overfitting. The final output layer used a softmax activation function to perform multiclass classification across the four land cover categories.
 
+\begin{table}[H]
+    \centering
+    \caption{Hyperparameter search space for the ANN classifier.}
+    \label{tab:ann_hpo}
+    \begin{tabular}{ll}
+        \hline
+        \textbf{Hyperparameter} & \textbf{Values tested} \\
+        \hline
+        \texttt{learning\_rate} & 0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001 \\
+        \texttt{optimizer}      & Adam (fixed) \\
+        \texttt{epochs}         & 50 (fixed) \\
+        \texttt{batch\_size}    & 32 (fixed) \\
+        \texttt{dropout}        & 0.3 (fixed) \\
+        \texttt{architecture}   & Dense(64)--Dropout--Dense(128)--Dropout--Dense(64)--Softmax \\
+        \hline
+        \multicolumn{2}{l}{\textit{Method: sequential evaluation on test set}} \\
+        \hline
+    \end{tabular}
+\end{table}
+
 The model was trained for 50 epochs and achieved a final Overall Accuracy of 99.59\% on the testing dataset. The training history demonstrated stable
 convergence and high validation accuracy throughout the training process.
 
@@ -293,6 +445,23 @@ normalized using standard scaling, as KNN relies on Euclidean distance and is se
 to differences in feature magnitude. Hyperparameter optimization was performed via
 5-fold cross-validation over a grid of candidate values for the number of neighbors,
 weighting scheme, and distance metric.
+
+\begin{table}[H]
+    \centering
+    \caption{Hyperparameter search space for the KNN classifier.}
+    \label{tab:knn_hpo}
+    \begin{tabular}{ll}
+        \hline
+        \textbf{Hyperparameter} & \textbf{Values tested} \\
+        \hline
+        \texttt{n\_neighbors} & 3, 5, 7, 9, 11 \\
+        \texttt{weights}      & uniform, distance \\
+        \texttt{metric}       & Euclidean (fixed) \\
+        \hline
+        \multicolumn{2}{l}{\textit{Method: 5-fold GridSearchCV, scoring: F1-macro}} \\
+        \hline
+    \end{tabular}
+\end{table}
 
 The optimal configuration found was $K = 3$, uniform weighting, and Euclidean distance,
 achieving a macro-averaged F1-Score of 0.9943 during cross-validation. Table~\ref{tab:knn_metrics}
@@ -434,7 +603,106 @@ Overall, the Gaussian Naive Bayes classifier provided a solid probabilistic base
 Therefore, the Naive Bayes model can be considered a useful reference model for the comparative evaluation stage. Its final performance, with an overall accuracy of 0.8442, a Kappa coefficient of 0.7923, and a macro F1-score of 0.8444, provides a baseline against which the remaining supervised classifiers can be compared.
 
 \section{Phase 3: Synthesis and Prediction}
+\subsection{Model Comparison}
+
+Table~\ref{tab:model_comparison} summarizes the overall performance of all five
+supervised classifiers evaluated in this project. The metrics reported correspond
+to the test set in each case.
+
+\begin{table}[H]
+    \centering
+    \caption{Comparative performance of all classifiers on the test set.}
+    \label{tab:model_comparison}
+    \begin{tabular}{lccccc}
+        \hline
+        \textbf{Model} & \textbf{OA (\%)} & \textbf{Kappa} & \textbf{F1-macro} & \textbf{F1-weighted} & \textbf{Best hyperparameter} \\
+        \hline
+        Decision Tree & 98.56 & 0.9808 & 0.9856 & 0.9856 & entropy, depth=None \\
+        SVM           & 99.75 & 0.9967     & 0.9975     & 0.9975     & C = 9.5 \\
+        ANN           & 99.55 & 0.9945     & 0.9959     & 0.9959     & lr = 0.005 \\
+        KNN           & 99.63 & 0.9951 & 0.9963 & 0.9963     & K=3, uniform \\
+        Naive Bayes   & 84.42 & 0.7923 & 0.8444 & 0.8445 & var\_smoothing=$10^{-12}$ \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Among the five models evaluated, SVM, ANN, and KNN achieved the highest overall
+accuracies (above 99\%), demonstrating that the spectral signatures extracted from
+the ten Sentinel-2 bands provide strong class separability for this scene. The
+Decision Tree also performed competitively with an OA of 98.56\%, while remaining
+fully interpretable. Naive Bayes was the weakest performer at 84.42\%, consistent
+with its independence assumption between spectral bands, which is a known limitation
+for multispectral data.
+
+The main confusion across all models occurred between spectrally similar classes,
+particularly Soil and Built-up, and to a lesser extent Water and Built-up in the
+post-event context. These errors are expected given the spectral ambiguity of
+exposed surfaces and debris in post-flood satellite imagery.
+
+\subsection{Full-Scene Inference}
+
+Based on the comparative evaluation, the \textbf{SVM classifier} was selected as
+the optimal model for full-scene inference, as it achieved the highest Overall
+Accuracy (99.75\%), Kappa Coefficient (0.9967), and macro F1-Score (0.9975) across
+all land cover categories.
+
+The model was retrained on the complete labeled dataset (8{,}108 samples) to
+maximize its generalization capacity before inference. The inference pipeline
+reads the ten Sentinel-2 band rasters (B2, B3, B4, B5, B6, B7, B8, B8A, B11,
+B12) clipped to the Region of Interest, applies the same standard scaling used
+during training, and classifies every valid pixel in the scene. Each pixel is
+assigned an integer code corresponding to its predicted land cover class:
+1 = Built-up, 2 = Soil, 3 = Vegetation, 4 = Water.
+
+The output was exported as a georeferenced GeoTIFF, preserving the original
+Coordinate Reference System (EPSG:32636) and affine transformation parameters
+of the source imagery to ensure spatial alignment with other geospatial layers.
+The Region of Interest covers approximately $56.2 \times 34.2$~km, corresponding
+to the area surrounding Nova Kakhovka where the hydrological effects of the dam
+collapse were most pronounced.
+
+\subsection{Thematic Map and Area Quantification}
+
+Figure~\ref{fig:thematic_map} shows the resulting thematic land cover map
+visualized in QGIS with discrete color symbology applied to the predicted
+categorical raster.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figures/thematic_map_qgis.png}
+    \caption{Predicted land cover map for the Kakhovka post-event Region of
+    Interest (SVM classifier, Sentinel-2 post-event image, June 18 2023).
+    Classes: Built-up (red), Soil (tan), Vegetation (green), Water (blue).}
+    \label{fig:thematic_map}
+\end{figure}
+
+Table~\ref{tab:area_per_class} quantifies the total area predicted for each
+land cover class within the Region of Interest. Vegetation is the dominant class,
+covering 1{,}280.0~km², which reflects the extensive agricultural and riparian
+vegetation surrounding the Dnieper River. Soil accounts for 391.8~km², representing
+exposed terrain and agricultural bare land following the reservoir drainage. Water
+covers 217.7~km², consistent with residual flooding and the river channel in
+the post-event scene. Built-up areas represent the smallest fraction at 34.0~km²,
+corresponding to the urban footprint of Nova Kakhovka and surrounding settlements.
+
+\begin{table}[H]
+\centering
+\caption{Estimated area per land cover class derived from the SVM predicted
+raster (pixel resolution: 10~m, ROI: $56.2 \times 34.2$~km).}
+\label{tab:area_per_class}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Class} & \textbf{Pixel Count} & \textbf{Area (ha)} & \textbf{Area (km\textsuperscript{2})} \\
+\midrule
+Built-up   &    339{,}601 &   3{,}396.0 &    34.0 \\
+Soil       &  3{,}917{,}935 &  39{,}179.3 &   391.8 \\
+Vegetation & 12{,}799{,}655 & 127{,}996.6 & 1{,}280.0 \\
+Water      &  2{,}176{,}889 &  21{,}768.9 &   217.7 \\
+\midrule
+\textbf{Total} & \textbf{19{,}234{,}080} & \textbf{192{,}340.8} & \textbf{1{,}923.4} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}
-
 
