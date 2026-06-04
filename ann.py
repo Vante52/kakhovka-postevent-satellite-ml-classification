@@ -36,6 +36,7 @@ datasetPerTest    = 0.3  # percentage (%) of dataset used for testing the predic
 pathSaveFigs      = "docs/figures"  # relative path to directory where figures/images are stored
 nameFigConfMatrix = "nn_confusion_matrix.png"   # name of confusion matrix figure
 nameFigHistory    = "nn_training_history.png"   # name of training history figure
+nameFigLRplot     = "nn_lr_vs_accuracy.png"     # name of learning rate tuning figure
 
 # ---------------------------------------------
 # 1. LOAD DATASET
@@ -89,26 +90,65 @@ y_train_cat = to_categorical(y_train, num_classes)
 y_test_cat  = to_categorical(y_test,  num_classes)
 
 # ---------------------------------------------
-# 6. BUILD AND TRAIN NEURAL NETWORK
+# 6. HYPERPARAMETER TUNING - learning rate
+# ---------------------------------------------
+lr_values = [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001]  # logarithmic steps
+results   = []
+
+print(f"\n{C_Y}Testing learning rate values...{C_RST}")
+for lr in lr_values:
+    model_tmp = Sequential([
+        Dense(64,  activation="relu", input_shape=(len(BAND_COLS),)),
+        Dropout(0.3),
+        Dense(128, activation="relu"),
+        Dropout(0.3),
+        Dense(64,  activation="relu"),
+        Dense(num_classes, activation="softmax")
+    ])
+    model_tmp.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
+        loss="categorical_crossentropy",
+        metrics=["accuracy"]
+    )
+    model_tmp.fit(
+        X_train, y_train_cat,
+        epochs=50,
+        batch_size=32,
+        validation_split=0.1,
+        verbose=0  # silent during tuning
+    )
+    y_tmp  = np.argmax(model_tmp.predict(X_test, verbose=0), axis=1)
+    oa_tmp = accuracy_score(y_test, y_tmp)
+    results.append({"lr": lr, "accuracy": oa_tmp})
+    print(f"  lr={lr}  =>  Accuracy: {oa_tmp * 100:.2f}%")
+
+results_df = pd.DataFrame(results)
+best_row   = results_df.loc[results_df["accuracy"].idxmax()]
+best_lr    = best_row["lr"]
+best_acc   = best_row["accuracy"]
+print(f"\n{C_G}Best lr={best_lr}  =>  Accuracy: {best_acc * 100:.2f}%{C_RST}")
+
+# ---------------------------------------------
+# 7. BUILD AND TRAIN FINAL MODEL WITH BEST LR
 # ---------------------------------------------
 model = Sequential([
-    Dense(64,  activation="relu", input_shape=(len(BAND_COLS),)),  # input layer
-    Dropout(0.3),                                                   # avoid overfitting
-    Dense(128, activation="relu"),                                  # hidden layer
+    Dense(64,  activation="relu", input_shape=(len(BAND_COLS),)),
     Dropout(0.3),
-    Dense(64,  activation="relu"),                                  # hidden layer
-    Dense(num_classes, activation="softmax")                        # output layer
+    Dense(128, activation="relu"),
+    Dropout(0.3),
+    Dense(64,  activation="relu"),
+    Dense(num_classes, activation="softmax")
 ])
 
 model.compile(
-    optimizer="adam",
+    optimizer=tf.keras.optimizers.Adam(learning_rate=best_lr),
     loss="categorical_crossentropy",
     metrics=["accuracy"]
 )
 
 model.summary()
 
-print(f"\n{C_Y}Training Neural Network{C_RST}...")
+print(f"\n{C_Y}Training final Neural Network with best lr={best_lr}{C_RST}...")
 history = model.fit(
     X_train, y_train_cat,
     epochs=50,
@@ -119,12 +159,12 @@ history = model.fit(
 print(f"{C_G}Done{C_RST}.")
 
 # ---------------------------------------------
-# 7. PREDICT
+# 8. PREDICT
 # ---------------------------------------------
 y_pred = np.argmax(model.predict(X_test), axis=1)  # pick class with highest probability
 
 # ---------------------------------------------
-# 8. METRICS
+# 9. METRICS
 # ---------------------------------------------
 
 # - Overall Accuracy -
@@ -147,14 +187,14 @@ disp = ConfusionMatrixDisplay(
     display_labels=le.classes_
 )
 disp.plot(ax=ax, cmap="Blues", colorbar=False)
-ax.set_title(f"Neural Network Confusion Matrix\nOverall Accuracy: {oa * 100:.2f}%")
+ax.set_title(f"Neural Network Confusion Matrix (lr={best_lr})\nOverall Accuracy: {oa * 100:.2f}%")
 plt.tight_layout()
 plt.savefig(f"{pathSaveFigs}/{nameFigConfMatrix}", dpi=150)
 plt.show()
 print(f"\nConfusion matrix {C_Y}figure/image saved into{C_RST} => {pathSaveFigs}/{nameFigConfMatrix}")
 
 # ---------------------------------------------
-# 9. TRAINING HISTORY
+# 10. TRAINING HISTORY
 # ---------------------------------------------
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
 
@@ -176,3 +216,19 @@ plt.tight_layout()
 plt.savefig(f"{pathSaveFigs}/{nameFigHistory}", dpi=150)
 plt.show()
 print(f"\nTraining history {C_Y}figure/image saved into{C_RST} => {pathSaveFigs}/{nameFigHistory}")
+
+# ---------------------------------------------
+# 11. LR vs ACCURACY PLOT
+# ---------------------------------------------
+fig, ax = plt.subplots(figsize=(9, 4))
+ax.plot(results_df["lr"], results_df["accuracy"] * 100, marker="o", color="steelblue")
+ax.axvline(best_lr, color="red", linestyle="--", label=f"Best lr={best_lr}")
+ax.set_xscale("log")  # log scale makes spacing legible
+ax.set_title("Neural Network — Learning Rate vs Overall Accuracy")
+ax.set_xlabel("Learning Rate (log scale)")
+ax.set_ylabel("Overall Accuracy (%)")
+ax.legend()
+plt.tight_layout()
+plt.savefig(f"{pathSaveFigs}/{nameFigLRplot}", dpi=150)
+plt.show()
+print(f"\nLR vs Accuracy {C_Y}figure/image saved into{C_RST} => {pathSaveFigs}/{nameFigLRplot}")

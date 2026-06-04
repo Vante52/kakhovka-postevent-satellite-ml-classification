@@ -82,52 +82,79 @@ X_train = scaler.fit_transform(X_train)
 X_test  = scaler.transform(X_test)       # only transform, never fit on test
 
 # ---------------------------------------------
-# 5. TRAIN SVM
+# 5. HYPERPARAMETER TUNING - C parameter
 # ---------------------------------------------
 
+C_values = np.arange(0.5, 15.5, 0.5)  # [0.5, 1.0, 1.5, ..., 10.0]
+results   = []
+
+print(f"\n{C_Y}Testing C values...{C_RST}")
+for c in C_values:
+    svm_tmp = SVC(kernel="rbf", C=c, gamma="scale", random_state=42)
+    svm_tmp.fit(X_train, y_train)
+    oa_tmp = accuracy_score(y_test, svm_tmp.predict(X_test))
+    results.append({"C": c, "accuracy": oa_tmp})
+    print(f"  C={c:.1f}  =>  Accuracy: {oa_tmp * 100:.2f}%")
+
+results_df  = pd.DataFrame(results)
+best_row    = results_df.loc[results_df["accuracy"].idxmax()]
+best_C      = best_row["C"]
+best_acc    = best_row["accuracy"]
+print(f"\n{C_G}Best C={best_C:.1f}  =>  Accuracy: {best_acc * 100:.2f}%{C_RST}")
+
+# ---------------------------------------------
+# 6. TRAIN FINAL SVM WITH BEST C
+# ---------------------------------------------
 svm = SVC(
-    kernel="rbf",       # Radial Basis Function - best for spectral data
-    C=10,               # regularization: higher = less tolerant to errors
-    gamma="scale",      # kernel coefficient, "scale" is a safe default
+    kernel="rbf",
+    C=best_C,
+    gamma="scale",
     random_state=42
 )
-
-print(f"\n{C_Y}Training SVM{C_RST}...")
+print(f"\n{C_Y}Training SVM with best C={best_C:.1f}{C_RST}...")
 svm.fit(X_train, y_train)
 print(f"{C_G}Done{C_RST}.")
 
 # ---------------------------------------------
-# 6. PREDICT
+# 7. PREDICT
 # ---------------------------------------------
 
 y_pred = svm.predict(X_test)
 
 # ---------------------------------------------
-# 7. METRICS
+# 8. METRICS
 # ---------------------------------------------
 
-# - Overall Accuracy -
 oa = accuracy_score(y_test, y_pred)
 print(f"\nOverall Accuracy: {C_G}{oa * 100:.2f}{C_RST}%")
 
-# - Per-class report -
 print(f"\n{C_B}Classification Report{C_RST}:")
-print(classification_report(
-    y_test, y_pred,
-    target_names=le.classes_
-))
+print(classification_report(y_test, y_pred, target_names=le.classes_))
 
-# - Confusion Matrix -
 cm = confusion_matrix(y_test, y_pred)
-
 fig, ax = plt.subplots(figsize=(7, 6))
-disp = ConfusionMatrixDisplay(
-    confusion_matrix=cm,
-    display_labels=le.classes_
-)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=le.classes_)
 disp.plot(ax=ax, cmap="Blues", colorbar=False)
-ax.set_title(f"SVM Confusion Matrix\nOverall Accuracy: {oa * 100:.2f}%")
+ax.set_title(f"SVM Confusion Matrix (C={best_C:.1f})\nOverall Accuracy: {oa * 100:.2f}%")
 plt.tight_layout()
 plt.savefig(f"{pathSaveFigs}/{nameFigConfMatrix}", dpi=150)
 plt.show()
 print(f"\nConfusion matrix {C_Y}figure/image saved into{C_RST} => {pathSaveFigs}/{nameFigConfMatrix}")
+
+# ---------------------------------------------
+# 9. C vs ACCURACY PLOT
+# ---------------------------------------------
+
+nameFigCplot = "svm_c_vs_accuracy.png"
+
+fig, ax = plt.subplots(figsize=(9, 4))
+ax.plot(results_df["C"], results_df["accuracy"] * 100, marker="o", color="steelblue")
+ax.axvline(best_C, color="red", linestyle="--", label=f"Best C={best_C:.1f}")
+ax.set_title("SVM — C vs Overall Accuracy")
+ax.set_xlabel("C (regularization)")
+ax.set_ylabel("Overall Accuracy (%)")
+ax.legend()
+plt.tight_layout()
+plt.savefig(f"{pathSaveFigs}/{nameFigCplot}", dpi=150)
+plt.show()
+print(f"\nC vs Accuracy {C_Y}figure/image saved into{C_RST} => {pathSaveFigs}/{nameFigCplot}")
